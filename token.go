@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/zofan/go-bits"
+	"net"
 	"time"
 )
 
@@ -16,7 +17,7 @@ const (
 	encodeHex     = `20`
 	encodeAscii85 = `30`
 
-	encodedSize = (8 * 8) + (1 * 4)
+	encodedSize = (8 * 8) + (2 * 4)
 )
 
 var (
@@ -36,6 +37,7 @@ type Token struct {
 	Expired   time.Time
 
 	Service uint32
+	IP      net.IP
 
 	Payload []byte
 }
@@ -66,6 +68,7 @@ func Decode(rawToken string, gcm cipher.AEAD) (t *Token, err error) {
 		Expired:   time.Unix(int64(binary.BigEndian.Uint64(raw[56:])), 0),
 
 		Service: binary.BigEndian.Uint32(raw[64:]),
+		IP:      net.IP(raw[68:72]),
 
 		Payload: raw[encodedSize:],
 	}
@@ -126,6 +129,7 @@ func (t *Token) Marshal() []byte {
 	binary.BigEndian.PutUint64(raw[56:], uint64(t.Expired.Unix()))
 
 	binary.BigEndian.PutUint32(raw[64:], t.Service)
+	//todo: binary.BigEndian.PutUint32(raw[68:], t.IP)
 
 	return append(raw, t.Payload...)
 }
