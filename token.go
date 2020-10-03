@@ -37,9 +37,17 @@ type Token struct {
 	Expired   time.Time
 
 	Service uint32
-	IP      net.IP
+	IP4     net.IP
 
 	Payload []byte
+}
+
+func New() Token {
+	now := time.Now()
+	return Token{
+		ID:      uint64(now.UnixNano()),
+		Created: now,
+	}
 }
 
 func Decode(rawToken string, gcm cipher.AEAD) (t *Token, err error) {
@@ -68,7 +76,7 @@ func Decode(rawToken string, gcm cipher.AEAD) (t *Token, err error) {
 		Expired:   time.Unix(int64(binary.BigEndian.Uint64(raw[56:])), 0),
 
 		Service: binary.BigEndian.Uint32(raw[64:]),
-		IP:      net.IP(raw[68:72]),
+		IP4:     net.IP(raw[68:]),
 
 		Payload: raw[encodedSize:],
 	}
@@ -115,7 +123,7 @@ func decodeRaw(rawToken string) (raw []byte, err error) {
 }
 
 func (t *Token) Marshal() []byte {
-	raw := make([]byte, encodedSize)
+	raw := make([]byte, encodedSize, encodedSize)
 
 	binary.BigEndian.PutUint64(raw[0:], t.ID)
 	binary.BigEndian.PutUint64(raw[8:], t.AccountID)
@@ -129,7 +137,10 @@ func (t *Token) Marshal() []byte {
 	binary.BigEndian.PutUint64(raw[56:], uint64(t.Expired.Unix()))
 
 	binary.BigEndian.PutUint32(raw[64:], t.Service)
-	//todo: binary.BigEndian.PutUint32(raw[68:], t.IP)
+
+	for i, b := range t.IP4.To4() {
+		raw[68+i] = b
+	}
 
 	return append(raw, t.Payload...)
 }
@@ -178,4 +189,8 @@ func (t *Token) EncodeAscii85(gcm cipher.AEAD) string {
 func (t *Token) IsActive() bool {
 	now := time.Now()
 	return now.Sub(t.Activated) > 0 && now.Sub(t.Expired) < 0
+}
+
+func (t *Token) Epoch() uint16 {
+	return uint16(t.Created.YearDay() % 365)
 }
