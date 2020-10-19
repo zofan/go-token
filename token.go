@@ -36,7 +36,7 @@ type Token struct {
 	Activated time.Time
 	Expired   time.Time
 
-	Service uint32
+	Service int
 	IP4     net.IP
 
 	Payload []byte
@@ -75,7 +75,7 @@ func Decode(rawToken string, gcm cipher.AEAD) (t *Token, err error) {
 		Activated: time.Unix(int64(binary.BigEndian.Uint64(raw[48:])), 0),
 		Expired:   time.Unix(int64(binary.BigEndian.Uint64(raw[56:])), 0),
 
-		Service: binary.BigEndian.Uint32(raw[64:]),
+		Service: int(binary.BigEndian.Uint32(raw[64:])),
 		IP4:     net.IP(raw[68:]),
 
 		Payload: raw[encodedSize:],
@@ -136,7 +136,7 @@ func (t *Token) Marshal() []byte {
 	binary.BigEndian.PutUint64(raw[48:], uint64(t.Activated.Unix()))
 	binary.BigEndian.PutUint64(raw[56:], uint64(t.Expired.Unix()))
 
-	binary.BigEndian.PutUint32(raw[64:], t.Service)
+	binary.BigEndian.PutUint32(raw[64:], uint32(t.Service))
 
 	for i, b := range t.IP4.To4() {
 		raw[68+i] = b
