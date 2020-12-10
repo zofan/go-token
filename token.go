@@ -24,16 +24,18 @@ var (
 )
 
 type Token struct {
-	ID        uint64
-	AccountID uint64
-	Bits      bits.Bits32
-	Service   int
+	ID      uint64
+	Account uint64
+	Bits    bits.Bits32
+	Service int
 }
 
-func New() Token {
+func New(service int, account uint64) Token {
 	now := time.Now()
 	return Token{
-		ID: uint64(now.UnixNano()),
+		ID:      uint64(now.UnixNano()),
+		Account: account,
+		Service: service,
 	}
 }
 
@@ -51,13 +53,13 @@ func Decode(rawToken string, gcm cipher.AEAD) (t *Token, err error) {
 	}
 
 	t = &Token{
-		ID:        binary.BigEndian.Uint64(raw[0:]),
-		AccountID: binary.BigEndian.Uint64(raw[8:]),
-		Bits:      bits.Bits32(binary.BigEndian.Uint32(raw[16:])),
-		Service:   int(binary.BigEndian.Uint16(raw[20:])),
+		ID:      binary.BigEndian.Uint64(raw[0:]),
+		Account: binary.BigEndian.Uint64(raw[8:]),
+		Bits:    bits.Bits32(binary.BigEndian.Uint32(raw[16:])),
+		Service: int(binary.BigEndian.Uint16(raw[20:])),
 	}
 
-	if t.Service == 0 || t.ID == 0 || t.AccountID == 0 {
+	if t.Service == 0 || t.ID == 0 || t.Account == 0 {
 		return nil, ErrInvalidToken
 	}
 
@@ -102,7 +104,7 @@ func (t *Token) Marshal() []byte {
 	raw := make([]byte, encodedSize, encodedSize)
 
 	binary.BigEndian.PutUint64(raw[0:], t.ID)
-	binary.BigEndian.PutUint64(raw[8:], t.AccountID)
+	binary.BigEndian.PutUint64(raw[8:], t.Account)
 	binary.BigEndian.PutUint32(raw[16:], uint32(t.Bits))
 	binary.BigEndian.PutUint16(raw[20:], uint16(t.Service))
 

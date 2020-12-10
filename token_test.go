@@ -10,9 +10,9 @@ func TestDecode(t *testing.T) {
 	gcm, _ := NewGCM(`grtfndgclktyzbag`)
 
 	tn := &Token{
-		ID:        45645,
-		AccountID: 18574,
-		Service:   567,
+		ID:      45645,
+		Account: 18574,
+		Service: 567,
 	}
 
 	_, err := tn.Encode(gcm)
