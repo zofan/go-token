@@ -1,9 +1,9 @@
 package token
 
 import (
+	"fmt"
 	"gotest.tools/assert"
 	"testing"
-	"time"
 )
 
 func TestDecode(t *testing.T) {
@@ -12,7 +12,6 @@ func TestDecode(t *testing.T) {
 	tn := &Token{
 		ID:        45645,
 		AccountID: 18574,
-		Created:   time.Now(),
 		Service:   567,
 	}
 
@@ -21,12 +20,15 @@ func TestDecode(t *testing.T) {
 
 	encodedBase64 := tn.EncodeBase64(gcm)
 	assert.NilError(t, err)
+	fmt.Println(encodedBase64)
 
 	encodedHex := tn.EncodeHex(gcm)
 	assert.NilError(t, err)
+	fmt.Println(encodedHex)
 
 	encodedAscii85 := tn.EncodeAscii85(gcm)
 	assert.NilError(t, err)
+	fmt.Println(encodedAscii85)
 
 	tnBase64, err := Decode(encodedBase64, gcm)
 	assert.NilError(t, err)
